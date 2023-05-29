@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:latest
+    volumes:
+      - ./data:/data/db
+    networks:
+      - musicNetwork
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_USER: mongo
+      MONGO_PASSWORD: 123
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: 'rabbitmq'
+    ports:
+      - '5673:5672'
+      - '15673:15672'
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    restart: always
+networks:
+  musicNetwork:
