@@ -1,13 +1,13 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Artist } from 'src/schemas/music.schema';
 import { AddAlbumDto, UpdateAlbumDto } from './dto';
+import {
+  MyConflictError,
+  MyInternalServerError,
+  MyNotFoundError,
+} from '../../utils';
 
 @Injectable()
 export class AlbumService {
@@ -19,14 +19,10 @@ export class AlbumService {
   async addAlbum(dto: AddAlbumDto) {
     // check exist artist
     try {
-      const exist = await this.findAlbum(
-        dto.albumName,
-        null,
-      );
+      const exist = await this.findAlbum(dto.albumName, null);
       if (exist) throw new ConflictException();
     } catch (e) {
-      if (e.status == 409)
-        return { msg: 'this movie is already exist' };
+      if (e.status == 409) return MyConflictError;
     }
 
     // add album to artist collection
@@ -45,8 +41,7 @@ export class AlbumService {
       },
     );
 
-    if (addAlbum.modifiedCount == 0)
-      throw new InternalServerErrorException();
+    if (addAlbum.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
     const { albums } = await this.artistModel.findOne({
@@ -64,10 +59,10 @@ export class AlbumService {
 
   async updateAlbumById(dto: UpdateAlbumDto) {
     // check exist album
-    const { _id: artistId } = await this.findAlbum(
-      null,
-      dto.id,
-    );
+    const findAlbum = await this.findAlbum(null, dto.id);
+
+    if (!findAlbum) return MyNotFoundError;
+    const { _id: artistId } = findAlbum;
 
     // delete empty data
     Object.keys(dto).forEach((key) => {
@@ -88,8 +83,7 @@ export class AlbumService {
       },
     );
 
-    if (updatedAlbum.modifiedCount == 0)
-      throw new InternalServerErrorException();
+    if (updatedAlbum.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
     // const { albums } = await this.artistModel.findById(
@@ -110,10 +104,10 @@ export class AlbumService {
 
   async removeAlbumById(id: string) {
     // check exist album
-    const { _id: artistId } = await this.findAlbum(
-      null,
-      id,
-    );
+    const findAlbum = await this.findAlbum(null, id);
+
+    if (!findAlbum) return MyNotFoundError;
+    const { _id: artistId } = findAlbum;
 
     // remove album from DB
     const removedAlbum = await this.artistModel.updateOne(
@@ -129,8 +123,7 @@ export class AlbumService {
       },
     );
 
-    if (removedAlbum.modifiedCount == 0)
-      throw new InternalServerErrorException();
+    if (removedAlbum.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
     // const { albums } = await this.artistModel.findById(
@@ -155,17 +148,14 @@ export class AlbumService {
         { 'albums.albumName': albumName },
         { 'albums.$': 1 },
       );
-
-      if (!album) throw new NotFoundException();
       return album;
     }
+
     if (id) {
       const album = await this.artistModel.findOne(
         { 'albums._id': id },
         { 'albums.$': 1 },
       );
-
-      if (!album) throw new NotFoundException();
       return album;
     }
   }

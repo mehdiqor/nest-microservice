@@ -14,8 +14,8 @@ export class ArtistController {
   }
 
   @MessagePattern('update-artist')
-  updateArtistById(id: string, dto: UpdateArtistDto) {
-    return this.artistService.updateArtistById(id, dto);
+  updateArtistById(dto: UpdateArtistDto) {
+    return this.artistService.updateArtistById(dto);
   }
 
   @MessagePattern('remove-artist')

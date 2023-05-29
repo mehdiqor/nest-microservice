@@ -19,7 +19,7 @@ export class TrackController {
   }
 
   @MessagePattern('remove-track')
-  removeTrack(trackName: string, albumName: string) {
-    return this.trackService.removeTrack(trackName, albumName);
+  removeTrack(data) {
+    return this.trackService.removeTrack(data);
   }
 }

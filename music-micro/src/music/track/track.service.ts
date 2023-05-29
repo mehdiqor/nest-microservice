@@ -1,15 +1,14 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Artist } from 'src/schemas/music.schema';
 import { AddTrackDto, UpdateTrackDto } from './dto';
-import getAudioDurationInSeconds from 'get-audio-duration';
+import {
+  MyConflictError,
+  MyInternalServerError,
+  MyNotFoundError,
+} from 'src/utils';
 
 @Injectable()
 export class TrackService {
@@ -30,8 +29,7 @@ export class TrackService {
       );
       if (find) throw new ConflictException();
     } catch (e) {
-      if (e.status == 409)
-        return { msg: 'this track is already exist' };
+      if (e.status == 409) return MyConflictError;
     }
 
     // save tags in array
@@ -74,13 +72,12 @@ export class TrackService {
       },
     );
 
-    if (track.modifiedCount == 0)
-      throw new InternalServerErrorException();
+    if (track.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
-    // const { _id, albums } = await this.artistModel.findOne({
-    //   artistName: dto.artistName,
-    // });
+    const { _id, albums } = await this.artistModel.findOne({
+      artistName: dto.artistName,
+    });
 
     // const elasticData = {
     //   id: _id,
@@ -97,7 +94,7 @@ export class TrackService {
   async updateTrack(dto: UpdateTrackDto) {
     // check exist track
     const findTrack = await this.findTrackById(dto.trackId);
-    const { _id: albumId } = findTrack[0].albums;
+    if (!findTrack) return MyNotFoundError;
 
     // delete empty data
     Object.keys(dto).forEach((key) => {
@@ -131,10 +128,10 @@ export class TrackService {
       },
     );
 
-    if (updatedTrack.modifiedCount == 0)
-      throw new InternalServerErrorException();
+    if (updatedTrack.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
+    // const { _id: albumId } = findTrack[0].albums;
     // const { _id, albums } = await this.artistModel.findOne(
     //   { 'albums._id': albumId },
     //   { 'albums.$': 1 },
@@ -152,36 +149,37 @@ export class TrackService {
     };
   }
 
-  async removeTrack(trackName: string, albumName: string) {
+  async removeTrack(data) {
     // check exist track
-    const { fileName } = await this.findTrackByName(
-      trackName,
-      albumName,
+    const findTrack = await this.findTrackByName(
+      data.trackName,
+      data.albumName,
     );
+    if (!findTrack) return MyNotFoundError;
+    const { fileName } = findTrack;
 
     // remove track from DB
     const removedTrack = await this.artistModel.updateOne(
       {
-        'albums.tracks.trackName': trackName,
+        'albums.tracks.trackName': data.trackName,
       },
       {
         $pull: {
           'albums.$.tracks': {
-            trackName,
+            trackName: data.trackName,
           },
         },
       },
     );
 
-    if (removedTrack.modifiedCount == 0)
-      throw new InternalServerErrorException();
+    if (removedTrack.modifiedCount == 0) return MyInternalServerError;
 
     // delete track file
     // deleteFileInPublic(fileName);
 
     // send data with event emitter to elasticsearch
     // const { _id, albums } = await this.artistModel.findOne(
-    //   { 'albums.albumName': albumName },
+    //   { 'albums.albumName': data.albumName },
     //   { 'albums.$': 1 },
     // );
 
@@ -213,38 +211,24 @@ export class TrackService {
         },
       },
     ]);
-
-    if (!findTrack) throw new NotFoundException();
     return findTrack;
   }
 
-  async findTrackByName(
-    trackName: string,
-    albumName: string,
-  ) {
+  async findTrackByName(trackName: string, albumName: string) {
     const artist = await this.artistModel.findOne({
       'albums.tracks.trackName': trackName,
     });
 
-    const album = artist.albums.find(
-      (t) => t.albumName == albumName,
-    );
-    const track = album.tracks.find(
-      (t) => t.trackName === trackName,
-    );
-
-    if (!track) throw new NotFoundException();
+    const album = artist.albums.find((t) => t.albumName == albumName);
+    const track = album.tracks.find((t) => t.trackName === trackName);
 
     return track;
   }
 
   getTime(seconds: number): string {
     let total: number = Math.round(seconds) / 60;
-    let [minutes, percent]: string[] =
-      String(total).split('.');
-    let second: string = Math.round(
-      (Number(percent) * 60) / 100,
-    )
+    let [minutes, percent]: string[] = String(total).split('.');
+    let second: string = Math.round((Number(percent) * 60) / 100)
       .toString()
       .substring(0, 2);
     let hour: number = 0;
@@ -257,10 +241,8 @@ export class TrackService {
         .substring(0, 2);
     }
     if (String(hour).length == 1) hour = Number(`0${hour}`);
-    if (String(minutes).length == 1)
-      minutes = String(`0${minutes}`);
-    if (String(second).length == 1)
-      second = String(`0${second}`);
+    if (String(minutes).length == 1) minutes = String(`0${minutes}`);
+    if (String(second).length == 1) second = String(`0${second}`);
     return hour + ':' + minutes + ':' + second;
   }
 }

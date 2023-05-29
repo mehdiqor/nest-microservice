@@ -1,13 +1,13 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Artist } from 'src/schemas/music.schema';
 import { AddArtistDto, UpdateArtistDto } from './dto';
+import {
+  MyConflictError,
+  MyInternalServerError,
+  MyNotFoundError,
+} from 'src/utils';
 
 @Injectable()
 export class ArtistService {
@@ -19,14 +19,10 @@ export class ArtistService {
   async addArtist(dto: AddArtistDto) {
     // check exist artist
     try {
-      const exist = await this.findArtist(
-        dto.artistName,
-        null,
-      );
+      const exist = await this.findArtist(dto.artistName, null);
       if (exist) throw new ConflictException();
     } catch (e) {
-      if (e.status == 409)
-        return { msg: 'this artist is already exist' };
+      if (e.status == 409) return MyConflictError;
     }
 
     // create artist and save in DB
@@ -34,7 +30,7 @@ export class ArtistService {
       artistName: dto.artistName,
     });
 
-    if (!artist) throw new InternalServerErrorException();
+    if (!artist) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
     // this.eventEmitter.emit('add.artist', artist);
@@ -42,9 +38,10 @@ export class ArtistService {
     return artist;
   }
 
-  async updateArtistById(id: string, dto: UpdateArtistDto) {
+  async updateArtistById(dto: UpdateArtistDto) {
     // check exist artist
-    await this.findArtist(null, id);
+    const findArtist = await this.findArtist(null, dto.id);
+    if (!findArtist) return MyNotFoundError;
 
     // delete empty data
     Object.keys(dto).forEach((key) => {
@@ -53,14 +50,14 @@ export class ArtistService {
 
     // update artist info
     const updatedArtist = await this.artistModel.updateOne(
-      { _id: id },
+      { _id: dto.id },
       {
         artistName: dto.artistName,
       },
     );
 
     if (updatedArtist.modifiedCount == 0)
-      throw new InternalServerErrorException();
+      return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
     // const data = {
@@ -77,15 +74,16 @@ export class ArtistService {
 
   async removeArtistByName(artistName: string) {
     // check exist artist
-    const { _id } = await this.findArtist(artistName, null);
+    const findArtist = await this.findArtist(artistName, null);
+    if (!findArtist) return MyNotFoundError;
+    const { _id } = findArtist;
 
     // remove artist from DB
     const deletedArtist = await this.artistModel.deleteOne({
       artistName,
     });
 
-    if (deletedArtist.deletedCount == 0)
-      throw new InternalServerErrorException();
+    if (deletedArtist.deletedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
     // this.eventEmitter.emit('remove.artist', _id);
@@ -101,14 +99,10 @@ export class ArtistService {
       const artist = await this.artistModel.findOne({
         artistName,
       });
-
-      if (!artist) throw new NotFoundException();
       return artist;
     }
     if (id) {
       const artist = await this.artistModel.findById(id);
-
-      if (!artist) throw new NotFoundException();
       return artist;
     }
   }
