@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
@@ -26,7 +26,7 @@ export class TrackService {
       );
       if (find) throw new ConflictException();
     } catch (e) {
-      if (e.status == 409) return MyConflictError;
+      if (e.status == HttpStatus.CONFLICT) return MyConflictError;
     }
 
     // save tags in array

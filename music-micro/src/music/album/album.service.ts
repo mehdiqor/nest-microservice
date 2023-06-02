@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Artist } from 'src/schemas/music.schema';
@@ -22,7 +22,7 @@ export class AlbumService {
       const exist = await this.findAlbum(dto.albumName, null);
       if (exist) throw new ConflictException();
     } catch (e) {
-      if (e.status == 409) return MyConflictError;
+      if (e.status == HttpStatus.CONFLICT) return MyConflictError;
     }
 
     // add album to artist collection
