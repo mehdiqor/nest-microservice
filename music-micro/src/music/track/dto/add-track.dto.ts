@@ -1,8 +1,4 @@
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AddTrackDto {
   @IsString()
@@ -25,5 +21,15 @@ export class AddTrackDto {
   @IsOptional()
   youtube_link?: string;
 
-  // track: Express.Multer.File;
+  @IsString()
+  @IsNotEmpty()
+  fileName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  filePath: string;
+
+  @IsString()
+  @IsNotEmpty()
+  length: string;
 }

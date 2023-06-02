@@ -18,10 +18,7 @@ export class TrackService {
     private config: ConfigService,
   ) {}
 
-  async addTrack(
-    dto: AddTrackDto,
-    // file: Express.Multer.File,
-  ) {
+  async addTrack(dto: AddTrackDto) {
     try {
       const find = await this.findTrackByName(
         dto.trackName,
@@ -33,31 +30,22 @@ export class TrackService {
     }
 
     // save tags in array
-    let tag: any;
-    if (!Array.isArray(dto.tags)) {
-      tag = dto.tags.split(',');
+    if (dto.tags) {
+      let tag: any;
+      if (!Array.isArray(dto.tags)) {
+        tag = dto.tags.split(',');
+      }
+      dto.tags = tag;
     }
-    dto.tags = tag;
-
-    // uploaded file directory
-    // const host = this.config.get('HOST');
-    // const port = this.config.get('PORT');
-    // const filePath = `${host}:${port}/${file.filename}`;
-
-    // calculate track length
-    // const seconds = await getAudioDurationInSeconds(
-    //   file.path,
-    // );
-    // const length = this.getTime(seconds);
 
     // add track to DB
     const data = {
       trackName: dto.trackName,
       tags: dto.tags,
       youtube_link: dto.youtube_link,
-      // fileName: file.filename,
-      // filePath,
-      // length,
+      fileName: dto.fileName,
+      filePath: dto.filePath,
+      length: dto.length,
     };
 
     const track = await this.artistModel.updateOne(
@@ -174,9 +162,6 @@ export class TrackService {
 
     if (removedTrack.modifiedCount == 0) return MyInternalServerError;
 
-    // delete track file
-    // deleteFileInPublic(fileName);
-
     // send data with event emitter to elasticsearch
     // const { _id, albums } = await this.artistModel.findOne(
     //   { 'albums.albumName': data.albumName },
@@ -192,6 +177,7 @@ export class TrackService {
     return {
       msg: 'track removed successfuly',
       removed: removedTrack.modifiedCount,
+      fileName
     };
   }
 

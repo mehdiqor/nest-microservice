@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: 'rabbitmq'
+    ports:
+      - '5675:5672'
+      - '15675:15672'
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    restart: always
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.0
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9300:9200
+    restart: always
+    networks:
+      - elasticnetwork
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+volumes:
+  elasticsearch-data:
+    driver: local
+networks:
+  elasticnetwork:
