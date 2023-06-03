@@ -22,7 +22,7 @@ export class ArtistService {
       const exist = await this.findArtist(dto.artistName, null);
       if (exist) throw new ConflictException();
     } catch (e) {
-      if (e.status == 409) return MyConflictError;
+      if (e.status == 409) return MyConflictError(dto.artistName);
     }
 
     // create artist and save in DB
@@ -41,7 +41,7 @@ export class ArtistService {
   async updateArtistById(dto: UpdateArtistDto) {
     // check exist artist
     const findArtist = await this.findArtist(null, dto.id);
-    if (!findArtist) return MyNotFoundError;
+    if (!findArtist) return MyNotFoundError(dto.id);
 
     // delete empty data
     Object.keys(dto).forEach((key) => {
@@ -75,7 +75,7 @@ export class ArtistService {
   async removeArtistByName(artistName: string) {
     // check exist artist
     const findArtist = await this.findArtist(artistName, null);
-    if (!findArtist) return MyNotFoundError;
+    if (!findArtist) return MyNotFoundError(artistName);
     const { _id } = findArtist;
 
     // remove artist from DB

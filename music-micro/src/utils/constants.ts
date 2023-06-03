@@ -1,16 +1,22 @@
-import { HttpStatus } from "@nestjs/common"
+import { HttpStatus } from '@nestjs/common';
 
-export const MyNotFoundError = {
-  statusCode: HttpStatus.NOT_FOUND,
-  message: 'Not Found'
-}
+export const MyNotFoundError = function (arg: string) {
+  return {
+    statusCode: HttpStatus.NOT_FOUND,
+    message: `${arg} NotFound`,
+  };
+};
 
-export const MyInternalServerError = {
-  statusCode: HttpStatus.BAD_GATEWAY,
-  message: 'DataBase Error'
-}
+export const MyInternalServerError = function () {
+  return {
+    statusCode: HttpStatus.BAD_GATEWAY,
+    message: `DataBase Error`,
+  };
+};
 
-export const MyConflictError = {
-  statusCode: HttpStatus.CONFLICT,
-  message: 'Already Exist'
-}
+export const MyConflictError = function (arg: string) {
+  return {
+    statusCode: HttpStatus.CONFLICT,
+    message: `${arg} is Already Exist`,
+  };
+};

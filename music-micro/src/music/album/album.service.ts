@@ -22,7 +22,7 @@ export class AlbumService {
       const exist = await this.findAlbum(dto.albumName, null);
       if (exist) throw new ConflictException();
     } catch (e) {
-      if (e.status == HttpStatus.CONFLICT) return MyConflictError;
+      if (e.status == HttpStatus.CONFLICT) return MyConflictError(dto.albumName);
     }
 
     // add album to artist collection
@@ -60,8 +60,7 @@ export class AlbumService {
   async updateAlbumById(dto: UpdateAlbumDto) {
     // check exist album
     const findAlbum = await this.findAlbum(null, dto.id);
-
-    if (!findAlbum) return MyNotFoundError;
+    if (!findAlbum) return MyNotFoundError(dto.id);
     const { _id: artistId } = findAlbum;
 
     // delete empty data
@@ -106,7 +105,7 @@ export class AlbumService {
     // check exist album
     const findAlbum = await this.findAlbum(null, id);
 
-    if (!findAlbum) return MyNotFoundError;
+    if (!findAlbum) return MyNotFoundError(id);
     const { _id: artistId } = findAlbum;
 
     // remove album from DB

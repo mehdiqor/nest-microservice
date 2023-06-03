@@ -19,7 +19,7 @@ export class ElasticService {
     const { index, search } = dto;
     // check exist index
     const exist = await this.checkExistIndex(index);
-    if (!exist) return MyNotFoundError;
+    if (!exist) return MyNotFoundError(index);
 
     const body = await this.esClient.search({
       index,
@@ -34,7 +34,7 @@ export class ElasticService {
     const { index, search } = dto;
     // check exist index
     const exist = await this.checkExistIndex(index);
-    if (!exist) return MyNotFoundError;
+    if (!exist) return MyNotFoundError(index);
     const body = await this.esClient.search({
       index,
       query: {
@@ -144,7 +144,7 @@ export class ElasticService {
   async createIndex(indexName: string) {
     // check exist index
     const exist = await this.checkExistIndex(indexName);
-    if (exist) return MyConflictError;
+    if (exist) return MyConflictError(indexName);
 
     // add index
     const index = await this.esClient.indices.create({

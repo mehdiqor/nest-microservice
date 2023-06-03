@@ -21,12 +21,17 @@ export class MovieService {
   ) {}
 
   async addMovie(dto: AddMovieDto) {
+    // check exist director
+    const existDirector = await this.findDirector(dto.directorName);
+    if (!existDirector) return MyNotFoundError(dto.directorName);
+
     // check exist movie
     try {
       const existMovie = await this.findMovie(dto.title, null);
       if (existMovie) throw new ConflictException();
     } catch (e) {
-      if (e.status == HttpStatus.CONFLICT) return MyConflictError;
+      if (e.status == HttpStatus.CONFLICT)
+        return MyConflictError(dto.title);
     }
 
     // add to db
@@ -73,7 +78,7 @@ export class MovieService {
   async updateMovie(dto: UpdateMovieDto) {
     // check exist movie
     const findMovie = await this.findMovie(null, dto.id);
-    if (!findMovie) return MyNotFoundError;
+    if (!findMovie) return MyNotFoundError(dto.id);
     const { _id: directorId } = findMovie;
 
     const data = {
@@ -93,9 +98,11 @@ export class MovieService {
       { 'movies._id': dto.id },
       {
         $set: {
-          movies: {
-            ...data,
-          },
+          'movies.$._id': dto.id,
+          'movies.$.title': dto.title,
+          'movies.$.year': dto.year,
+          'movies.$.genre': dto.genre,
+          'movies.$.link': dto.link,
         },
       },
     );
@@ -117,10 +124,16 @@ export class MovieService {
     };
   }
 
-  async removeMovie(name: string, title: string) {
+  async removeMovie(data: any) {
+    const { name, title } = data;
+
+    // check exist director
+    const existDirector = await this.findDirector(name);
+    if (!existDirector) return MyNotFoundError(name);
+
     // check exist movie
     const findMovie = await this.findMovie(title, null);
-    if (!findMovie) return MyNotFoundError;
+    if (!findMovie) return MyNotFoundError(title);
 
     // remove from db
     const removedMovie = await this.directorModel.updateOne(
@@ -168,5 +181,10 @@ export class MovieService {
       });
       return movie;
     }
+  }
+
+  async findDirector(name: string) {
+    const director = await this.directorModel.findOne({ name });
+    return director;
   }
 }

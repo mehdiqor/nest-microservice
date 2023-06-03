@@ -1,4 +1,8 @@
-import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
@@ -26,7 +30,8 @@ export class TrackService {
       );
       if (find) throw new ConflictException();
     } catch (e) {
-      if (e.status == HttpStatus.CONFLICT) return MyConflictError;
+      if (e.status == HttpStatus.CONFLICT)
+        return MyConflictError('This Track');
     }
 
     // save tags in array
@@ -82,7 +87,7 @@ export class TrackService {
   async updateTrack(dto: UpdateTrackDto) {
     // check exist track
     const findTrack = await this.findTrackById(dto.trackId);
-    if (!findTrack) return MyNotFoundError;
+    if (!findTrack) return MyNotFoundError(dto.trackId);
 
     // delete empty data
     Object.keys(dto).forEach((key) => {
@@ -143,7 +148,7 @@ export class TrackService {
       data.trackName,
       data.albumName,
     );
-    if (!findTrack) return MyNotFoundError;
+    if (!findTrack) return MyNotFoundError('Track');
     const { fileName } = findTrack;
 
     // remove track from DB
@@ -177,7 +182,7 @@ export class TrackService {
     return {
       msg: 'track removed successfuly',
       removed: removedTrack.modifiedCount,
-      fileName
+      fileName,
     };
   }
 

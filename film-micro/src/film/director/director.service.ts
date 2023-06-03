@@ -22,7 +22,7 @@ export class DirectorService {
       const existDirector = await this.findDirector(dto.name, null);
       if (existDirector) throw new ConflictException();
     } catch (e) {
-      if (e.status == HttpStatus.CONFLICT) return MyConflictError;
+      if (e.status == HttpStatus.CONFLICT) return MyConflictError(dto.name);
     }
 
     // add to db
@@ -41,7 +41,7 @@ export class DirectorService {
   async updateDirector(dto: UpdateDirectorDto) {
     // check exist director
     const findDirector = await this.findDirector(null, dto.id);
-    if (!findDirector) return MyNotFoundError;
+    if (!findDirector) return MyNotFoundError(dto.id);
 
     // delete empty data
     Object.keys(dto).forEach((key) => {
@@ -73,7 +73,7 @@ export class DirectorService {
   async removeDirector(id: string) {
     // check exist director
     const findDirector = await this.findDirector(null, id);
-    if (!findDirector) return MyNotFoundError;
+    if (!findDirector) return MyNotFoundError(id);
 
     // delete from db
     const removedDirector = await this.directorModel.deleteOne({

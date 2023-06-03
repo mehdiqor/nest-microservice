@@ -20,6 +20,6 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-    restart: always
+    restart: 'no'
 networks:
   musicNetwork:
