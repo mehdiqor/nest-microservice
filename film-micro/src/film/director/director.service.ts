@@ -41,7 +41,10 @@ export class DirectorService {
     if (!director) return MyInternalServerError('DataBase');
 
     // send data to elastic
-    const elastic = this.sendToElastic('add.elastic.director', director);
+    const elastic = this.sendToElastic(
+      'add.elastic.director',
+      director,
+    );
     if (!elastic) return MyInternalServerError('Elastic');
 
     return elastic;
@@ -108,6 +111,14 @@ export class DirectorService {
       const director = await this.directorModel.findById(id);
       return director;
     }
+  }
+
+  async getAllData(message: string) {
+    if (message == 'ADMIN') {
+      const filmsData = await this.directorModel.find();
+      return filmsData;
+    }
+    return null;
   }
 
   sendToElastic(address: string, data) {

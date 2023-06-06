@@ -21,4 +21,9 @@ export class DirectorController {
   removeDirector(id: string) {
     return this.directorService.removeDirector(id);
   }
+
+  @MessagePattern('all-films')
+  getAllData(message: string) {
+    return this.directorService.getAllData(message);
+  }
 }

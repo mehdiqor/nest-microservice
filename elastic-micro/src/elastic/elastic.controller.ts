@@ -61,4 +61,9 @@ export class ElasticController {
   updateDirector(data) {
     return this.elasticService.updateDirector(data);
   }
+
+  @MessagePattern('add.elastic.artist')
+  addArtist(data) {
+    return this.elasticService.addArtist(data);
+  }
 }

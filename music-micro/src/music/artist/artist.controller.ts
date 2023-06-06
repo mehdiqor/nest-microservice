@@ -22,4 +22,9 @@ export class ArtistController {
   removeArtistByName(artistName: string) {
     return this.artistService.removeArtistByName(artistName);
   }
+
+  @MessagePattern('all-musics')
+  getAllData(message: string) {
+    return this.artistService.getAllData(message);
+  }
 }

@@ -8,12 +8,15 @@ import {
   MyInternalServerError,
   MyNotFoundError,
 } from 'src/utils';
+import { ConfigService } from '@nestjs/config';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Injectable()
 export class ArtistService {
   constructor(
     @InjectModel(Artist.name)
     private artistModel: Model<Artist>,
+    private config: ConfigService,
   ) {}
 
   async addArtist(dto: AddArtistDto) {
@@ -30,12 +33,13 @@ export class ArtistService {
       artistName: dto.artistName,
     });
 
-    if (!artist) return MyInternalServerError;
+    if (!artist) return MyInternalServerError('DataBase');
 
     // send data with event emitter to elasticsearch
-    // this.eventEmitter.emit('add.artist', artist);
+    const elastic = this.sendToElastic('add.elastic.artist', artist);
+    if (!elastic) return MyInternalServerError('Elastic');
 
-    return artist;
+    return elastic;
   }
 
   async updateArtistById(dto: UpdateArtistDto) {
@@ -52,24 +56,24 @@ export class ArtistService {
     const updatedArtist = await this.artistModel.updateOne(
       { _id: dto.id },
       {
-        artistName: dto.artistName,
+        $set: {
+          artistName: dto.artistName,
+        },
       },
     );
 
     if (updatedArtist.modifiedCount == 0)
-      return MyInternalServerError;
+      return MyInternalServerError('DataBase');
 
     // send data with event emitter to elasticsearch
-    // const data = {
-    //   id,
-    //   artistName: dto.artistName,
-    // };
-    // this.eventEmitter.emit('edit.artist', data);
-
-    return {
-      msg: 'artist info updated successfully',
-      updated: updatedArtist.modifiedCount,
+    const data = {
+      id: dto.id,
+      artistName: dto.artistName,
     };
+    const elastic = this.sendToElastic('edit.elastic.artist', data);
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async removeArtistByName(artistName: string) {
@@ -105,5 +109,29 @@ export class ArtistService {
       const artist = await this.artistModel.findById(id);
       return artist;
     }
+  }
+
+  async getAllData(message: string) {
+    if (message == 'ADMIN') {
+      const musicsData = await this.artistModel.find();
+      return musicsData;
+    }
+    return null;
+  }
+
+  sendToElastic(address: string, data) {
+    const url: string = this.config.get('ELASTIC_URL');
+    const queue: string = this.config.get('ELASTIC_QUEUE');
+
+    const redisMicroservice = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [url],
+        queue,
+      },
+    });
+
+    const result = redisMicroservice.send(address, data);
+    return result;
   }
 }

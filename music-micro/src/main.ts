@@ -32,6 +32,6 @@ async function bootstrap() {
 
   // Logger
   const logger = new Logger();
-  logger.log('Microservice is listening');
+  logger.log('Music-Microservice is listening');
 }
 bootstrap();
