@@ -150,7 +150,8 @@ export class ElasticService {
     const index = await this.esClient.indices.create({
       index: indexName,
     });
-    console.log(index);
+
+    return index;
   }
 
   async checkExistIndex(indexName: string) {
@@ -158,7 +159,6 @@ export class ElasticService {
       index: indexName,
     });
 
-    console.log(index);
     return index;
   }
 
@@ -167,12 +167,12 @@ export class ElasticService {
       index: indexName,
     });
 
-    if (index.acknowledged == false) console.log('elastic error');
+    if (index.acknowledged == false) return MyInternalServerError;
 
-    console.log({
+    return {
       msg: 'Index removed',
       removed: index.acknowledged,
-    });
+    };
   }
 
   // Artist Event Emitter

@@ -21,4 +21,19 @@ export class ElasticController {
   movieSearch(search: string) {
     return this.elasticService.movieSearch(search);
   }
+
+  @MessagePattern('create-index')
+  createIndex(indexName: string) {
+    return this.elasticService.createIndex(indexName)
+  }
+
+  @MessagePattern('exist-index')
+  checkExistIndex(indexName: string) {
+    return this.elasticService.checkExistIndex(indexName)
+  }
+
+  @MessagePattern('remove-index')
+  removeIndex(indexName: string) {
+    return this.elasticService.removeIndex(indexName)
+  }
 }
