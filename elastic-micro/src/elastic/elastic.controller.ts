@@ -42,22 +42,22 @@ export class ElasticController {
     return this.elasticService.removeIndex(indexName);
   }
 
-  @MessagePattern('add-director')
+  @MessagePattern('add.elastic.director')
   addDirector(data) {
     return this.elasticService.addDirector(data);
   }
 
-  @MessagePattern('edit-director')
+  @MessagePattern('edit.elastic.director')
   editDirector(data) {
     return this.elasticService.editDirector(data);
   }
 
-  @MessagePattern('remove-director')
+  @MessagePattern('remove.elastic.director')
   removeDirector(id: string) {
     return this.elasticService.removeDirector(id);
   }
 
-  @MessagePattern('update-director')
+  @MessagePattern('update.elastic.director')
   updateDirector(data) {
     return this.elasticService.updateDirector(data);
   }

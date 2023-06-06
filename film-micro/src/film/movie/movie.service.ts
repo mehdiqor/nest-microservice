@@ -186,7 +186,7 @@ export class MovieService {
   }
 
   sendToElastic(data: any) {
-    const address = 'update-director';
+    const address = 'update.elastic.director';
 
     const url: string = this.config.get('ELASTIC_URL');
     const queue: string = this.config.get('ELASTIC_QUEUE');

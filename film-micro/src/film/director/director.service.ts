@@ -41,7 +41,7 @@ export class DirectorService {
     if (!director) return MyInternalServerError('DataBase');
 
     // send data to elastic
-    const elastic = this.sendToElastic('add-director', director);
+    const elastic = this.sendToElastic('add.elastic.director', director);
     if (!elastic) return MyInternalServerError('Elastic');
 
     return elastic;
@@ -71,7 +71,7 @@ export class DirectorService {
       id: dto.id,
       name: dto.name,
     };
-    const elastic = this.sendToElastic('edit-director', data);
+    const elastic = this.sendToElastic('edit.elastic.director', data);
     if (!elastic) return MyInternalServerError('Elastic');
 
     return elastic;
@@ -91,7 +91,7 @@ export class DirectorService {
       return MyInternalServerError;
 
     // send data to elastic
-    const elastic = this.sendToElastic('remove-director', id);
+    const elastic = this.sendToElastic('remove.elastic.director', id);
     if (!elastic) return MyInternalServerError('Elastic');
 
     return elastic;

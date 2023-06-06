@@ -7,7 +7,7 @@ services:
     networks:
       - musicNetwork
     ports:
-      - 27017:27017
+      - 27019:27017
     environment:
       MONGO_USER: mongo
       MONGO_PASSWORD: 123
