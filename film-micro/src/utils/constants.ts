@@ -7,10 +7,10 @@ export const MyNotFoundError = function (arg: string) {
   };
 };
 
-export const MyInternalServerError = function () {
+export const MyInternalServerError = function (arg: string) {
   return {
     statusCode: HttpStatus.BAD_GATEWAY,
-    message: `DataBase Error`,
+    message: `${arg} Error`,
   };
 };
 

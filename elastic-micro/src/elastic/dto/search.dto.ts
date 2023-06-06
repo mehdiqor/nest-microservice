@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class SearchDto {
   @IsString()
@@ -6,6 +6,6 @@ export class SearchDto {
   index: string;
 
   @IsString()
-  @IsOptional()
-  search?: string;
+  @IsNotEmpty()
+  search: string;
 }

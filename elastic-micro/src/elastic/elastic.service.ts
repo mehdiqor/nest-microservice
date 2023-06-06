@@ -15,6 +15,23 @@ export class ElasticService {
   ) {}
 
   // Search
+  async getAllDocuments(index: string) {
+    // check exist index
+    const exist = await this.checkExistIndex(index);
+    if (!exist) return MyNotFoundError(index);
+
+    const body = await this.esClient.search({
+      index,
+      body: {
+        query: {
+          match_all: {},
+        },
+      },
+    });
+
+    return body.hits.hits;
+  }
+
   async wordSearch(dto: SearchDto) {
     const { index, search } = dto;
     // check exist index
@@ -175,10 +192,10 @@ export class ElasticService {
     };
   }
 
-  // Artist Event Emitter
-  async addArtist(data) {
+  // Artist
+  async addArtist(data: any) {
     const elastic = await this.esClient.index({
-      index: 'musics',
+      index: 'music',
       id: data._id,
       body: {
         artistName: data.artistName,
@@ -226,7 +243,7 @@ export class ElasticService {
     if (elastic._shards.successful == 0) return MyInternalServerError;
   }
 
-  // Director Event Emitter
+  // Director
   async addDirector(data) {
     const elastic = await this.esClient.index({
       index: 'film',
@@ -237,7 +254,8 @@ export class ElasticService {
       },
     });
 
-    if (elastic._shards.successful == 0) return MyInternalServerError;
+    if (elastic._shards.successful == 0) return false;
+    return elastic;
   }
 
   async editDirector(data) {
@@ -251,7 +269,8 @@ export class ElasticService {
       },
     });
 
-    if (elastic._shards.successful == 0) return MyInternalServerError;
+    if (elastic._shards.successful == 0) return false;
+    return elastic;
   }
 
   async removeDirector(id: string) {
@@ -260,7 +279,8 @@ export class ElasticService {
       id,
     });
 
-    if (elastic._shards.successful == 0) return MyInternalServerError;
+    if (elastic._shards.successful == 0) return false;
+    return elastic;
   }
 
   async updateDirector(data) {

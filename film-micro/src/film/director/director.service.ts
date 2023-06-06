@@ -1,4 +1,8 @@
-import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Director } from 'src/schemas/film.schema';
@@ -8,12 +12,15 @@ import {
   MyInternalServerError,
   MyNotFoundError,
 } from 'src/utils';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DirectorService {
   constructor(
     @InjectModel(Director.name)
     private directorModel: Model<Director>,
+    private config: ConfigService,
   ) {}
 
   async addDirector(dto: AddDirectorDto) {
@@ -22,7 +29,8 @@ export class DirectorService {
       const existDirector = await this.findDirector(dto.name, null);
       if (existDirector) throw new ConflictException();
     } catch (e) {
-      if (e.status == HttpStatus.CONFLICT) return MyConflictError(dto.name);
+      if (e.status == HttpStatus.CONFLICT)
+        return MyConflictError(dto.name);
     }
 
     // add to db
@@ -30,12 +38,13 @@ export class DirectorService {
       name: dto.name,
     });
 
-    if (!director) return MyInternalServerError;
+    if (!director) return MyInternalServerError('DataBase');
 
     // send data to elastic
-    // this.eventEmitter.emit('add.director', director);
+    const elastic = this.sendToElastic('add-director', director);
+    if (!elastic) return MyInternalServerError('Elastic');
 
-    return director;
+    return elastic;
   }
 
   async updateDirector(dto: UpdateDirectorDto) {
@@ -62,12 +71,10 @@ export class DirectorService {
       id: dto.id,
       name: dto.name,
     };
-    // this.eventEmitter.emit('edit.director', data);
+    const elastic = this.sendToElastic('edit-director', data);
+    if (!elastic) return MyInternalServerError('Elastic');
 
-    return {
-      msg: 'director info updated successfully',
-      updated: updatedDirector.modifiedCount,
-    };
+    return elastic;
   }
 
   async removeDirector(id: string) {
@@ -84,12 +91,10 @@ export class DirectorService {
       return MyInternalServerError;
 
     // send data to elastic
-    // this.eventEmitter.emit('remove.director', id);
+    const elastic = this.sendToElastic('remove-director', id);
+    if (!elastic) return MyInternalServerError('Elastic');
 
-    return {
-      msg: 'director removed successfully',
-      removed: removedDirector.deletedCount,
-    };
+    return elastic;
   }
 
   async findDirector(name?: string, id?: string) {
@@ -103,5 +108,21 @@ export class DirectorService {
       const director = await this.directorModel.findById(id);
       return director;
     }
+  }
+
+  sendToElastic(address: string, data) {
+    const url: string = this.config.get('ELASTIC_URL');
+    const queue: string = this.config.get('ELASTIC_QUEUE');
+
+    const redisMicroservice = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [url],
+        queue,
+      },
+    });
+
+    const result = redisMicroservice.send(address, data);
+    return result;
   }
 }

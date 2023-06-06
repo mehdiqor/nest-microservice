@@ -7,6 +7,11 @@ import { SearchDto } from './dto';
 export class ElasticController {
   constructor(private readonly elasticService: ElasticService) {}
 
+  @MessagePattern('all-documents')
+  getAllDocuments(index: string) {
+    return this.elasticService.getAllDocuments(index);
+  }
+
   @MessagePattern('word-search')
   wordSearch(dto: SearchDto) {
     return this.elasticService.wordSearch(dto);
@@ -24,16 +29,36 @@ export class ElasticController {
 
   @MessagePattern('create-index')
   createIndex(indexName: string) {
-    return this.elasticService.createIndex(indexName)
+    return this.elasticService.createIndex(indexName);
   }
 
   @MessagePattern('exist-index')
   checkExistIndex(indexName: string) {
-    return this.elasticService.checkExistIndex(indexName)
+    return this.elasticService.checkExistIndex(indexName);
   }
 
   @MessagePattern('remove-index')
   removeIndex(indexName: string) {
-    return this.elasticService.removeIndex(indexName)
+    return this.elasticService.removeIndex(indexName);
+  }
+
+  @MessagePattern('add-director')
+  addDirector(data) {
+    return this.elasticService.addDirector(data);
+  }
+
+  @MessagePattern('edit-director')
+  editDirector(data) {
+    return this.elasticService.editDirector(data);
+  }
+
+  @MessagePattern('remove-director')
+  removeDirector(id: string) {
+    return this.elasticService.removeDirector(id);
+  }
+
+  @MessagePattern('update-director')
+  updateDirector(data) {
+    return this.elasticService.updateDirector(data);
   }
 }
