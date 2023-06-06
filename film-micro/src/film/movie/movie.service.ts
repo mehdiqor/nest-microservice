@@ -12,12 +12,15 @@ import {
   MyInternalServerError,
   MyNotFoundError,
 } from 'src/utils';
+import { ConfigService } from '@nestjs/config';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Injectable()
 export class MovieService {
   constructor(
     @InjectModel(Director.name)
     private directorModel: Model<Director>,
+    private config: ConfigService,
   ) {}
 
   async addMovie(dto: AddMovieDto) {
@@ -61,18 +64,15 @@ export class MovieService {
     const { _id, movies } = await this.directorModel.findOne({
       name: dto.directorName,
     });
-
     const elasticData = {
       id: _id,
       movies,
     };
 
-    // this.eventEmitter.emit('update.director', elasticData);
+    const elastic = this.sendToElastic(elasticData);
+    if (!elastic) return MyInternalServerError('Elastic');
 
-    return {
-      msg: 'movie added successfully',
-      add: movie.modifiedCount,
-    };
+    return elastic;
   }
 
   async updateMovie(dto: UpdateMovieDto) {
@@ -116,12 +116,11 @@ export class MovieService {
       id: directorId,
       movies,
     };
-    // this.eventEmitter.emit('update.director', elasticData);
 
-    return {
-      msg: 'movie info updated successfully',
-      updated: updatedMovie.modifiedCount,
-    };
+    const elastic = this.sendToElastic(elasticData);
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async removeMovie(data: any) {
@@ -159,12 +158,10 @@ export class MovieService {
       movies,
     };
 
-    // this.eventEmitter.emit('update.director', elasticData);
+    const elastic = this.sendToElastic(elasticData);
+    if (!elastic) return MyInternalServerError('Elastic');
 
-    return {
-      msg: 'movie removed successfully',
-      removed: removedMovie.modifiedCount,
-    };
+    return elastic;
   }
 
   async findMovie(title?: string, id?: string) {
@@ -186,5 +183,23 @@ export class MovieService {
   async findDirector(name: string) {
     const director = await this.directorModel.findOne({ name });
     return director;
+  }
+
+  sendToElastic(data: any) {
+    const address = 'update-director';
+
+    const url: string = this.config.get('ELASTIC_URL');
+    const queue: string = this.config.get('ELASTIC_QUEUE');
+
+    const redisMicroservice = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [url],
+        queue,
+      },
+    });
+
+    const result = redisMicroservice.send(address, data);
+    return result;
   }
 }

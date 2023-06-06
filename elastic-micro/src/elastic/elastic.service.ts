@@ -294,6 +294,7 @@ export class ElasticService {
       },
     });
 
-    if (elastic._shards.successful == 0) return MyInternalServerError;
+    if (elastic._shards.successful == 0) return false;
+    return elastic;
   }
 }
