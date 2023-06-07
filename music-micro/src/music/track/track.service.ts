@@ -13,6 +13,7 @@ import {
   MyInternalServerError,
   MyNotFoundError,
 } from 'src/utils';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Injectable()
 export class TrackService {
@@ -72,16 +73,18 @@ export class TrackService {
       artistName: dto.artistName,
     });
 
-    // const elasticData = {
-    //   id: _id,
-    //   albums,
-    // };
-    // this.eventEmitter.emit('update.artist', elasticData);
-
-    return {
-      msg: 'created successfully',
-      added: track.modifiedCount,
+    const elasticData = {
+      id: _id,
+      albums,
     };
+
+    const elastic = this.sendToElastic(
+      'update.elastic.artist',
+      elasticData,
+    );
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async updateTrack(dto: UpdateTrackDto) {
@@ -124,22 +127,24 @@ export class TrackService {
     if (updatedTrack.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
-    // const { _id: albumId } = findTrack[0].albums;
-    // const { _id, albums } = await this.artistModel.findOne(
-    //   { 'albums._id': albumId },
-    //   { 'albums.$': 1 },
-    // );
+    const { _id: albumId } = findTrack[0].albums;
+    const { _id, albums } = await this.artistModel.findOne(
+      { 'albums._id': albumId },
+      { 'albums.$': 1 },
+    );
 
-    // const elasticData = {
-    //   id: _id,
-    //   albums,
-    // };
-    // this.eventEmitter.emit('update.artist', elasticData);
-
-    return {
-      msg: 'track info updated successfully',
-      updated: updatedTrack.modifiedCount,
+    const elasticData = {
+      id: _id,
+      albums,
     };
+
+    const elastic = this.sendToElastic(
+      'update.elastic.artist',
+      elasticData,
+    );
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async removeTrack(data) {
@@ -168,22 +173,23 @@ export class TrackService {
     if (removedTrack.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
-    // const { _id, albums } = await this.artistModel.findOne(
-    //   { 'albums.albumName': data.albumName },
-    //   { 'albums.$': 1 },
-    // );
+    const { _id, albums } = await this.artistModel.findOne(
+      { 'albums.albumName': data.albumName },
+      { 'albums.$': 1 },
+    );
 
-    // const elasticData = {
-    //   id: _id,
-    //   albums,
-    // };
-    // this.eventEmitter.emit('update.artist', elasticData);
-
-    return {
-      msg: 'track removed successfuly',
-      removed: removedTrack.modifiedCount,
-      fileName,
+    const elasticData = {
+      id: _id,
+      albums,
     };
+
+    const elastic = this.sendToElastic(
+      'update.elastic.artist',
+      elasticData,
+    );
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async findTrackById(id: string) {
@@ -235,5 +241,21 @@ export class TrackService {
     if (String(minutes).length == 1) minutes = String(`0${minutes}`);
     if (String(second).length == 1) second = String(`0${second}`);
     return hour + ':' + minutes + ':' + second;
+  }
+
+  sendToElastic(address: string, data) {
+    const url: string = this.config.get('ELASTIC_URL');
+    const queue: string = this.config.get('ELASTIC_QUEUE');
+
+    const redisMicroservice = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [url],
+        queue,
+      },
+    });
+
+    const result = redisMicroservice.send(address, data);
+    return result;
   }
 }

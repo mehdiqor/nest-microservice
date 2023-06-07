@@ -66,4 +66,19 @@ export class ElasticController {
   addArtist(data) {
     return this.elasticService.addArtist(data);
   }
+
+  @MessagePattern('edit.elastic.artist')
+  editArtist(data) {
+    return this.elasticService.editArtist(data);
+  }
+
+  @MessagePattern('remove.elastic.artist')
+  removeArtist(id) {
+    return this.elasticService.removeArtist(id);
+  }
+
+  @MessagePattern('update.elastic.artist')
+  updateArtist(data) {
+    return this.elasticService.updateArtist(data);
+  }
 }

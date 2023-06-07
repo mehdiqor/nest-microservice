@@ -90,12 +90,10 @@ export class ArtistService {
     if (deletedArtist.deletedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
-    // this.eventEmitter.emit('remove.artist', _id);
+    const elastic = this.sendToElastic('remove.elastic.artist', _id);
+    if (!elastic) return MyInternalServerError('Elastic');
 
-    return {
-      msg: 'artist removed successfully',
-      removed: deletedArtist.deletedCount,
-    };
+    return elastic;
   }
 
   async findArtist(artistName?: string, id?: string) {

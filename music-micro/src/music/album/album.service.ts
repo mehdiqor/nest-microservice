@@ -1,4 +1,8 @@
-import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Artist } from 'src/schemas/music.schema';
@@ -8,12 +12,15 @@ import {
   MyInternalServerError,
   MyNotFoundError,
 } from '../../utils';
+import { ConfigService } from '@nestjs/config';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Injectable()
 export class AlbumService {
   constructor(
     @InjectModel(Artist.name)
     private artistModel: Model<Artist>,
+    private config: ConfigService,
   ) {}
 
   async addAlbum(dto: AddAlbumDto) {
@@ -22,7 +29,8 @@ export class AlbumService {
       const exist = await this.findAlbum(dto.albumName, null);
       if (exist) throw new ConflictException();
     } catch (e) {
-      if (e.status == HttpStatus.CONFLICT) return MyConflictError(dto.albumName);
+      if (e.status == HttpStatus.CONFLICT)
+        return MyConflictError(dto.albumName);
     }
 
     // add album to artist collection
@@ -52,9 +60,11 @@ export class AlbumService {
       id: dto.artistId,
       albums,
     };
-    // this.eventEmitter.emit('update.artist', data);
 
-    return albums;
+    const elastic = this.sendToElastic('update.elastic.artist', data);
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async updateAlbumById(dto: UpdateAlbumDto) {
@@ -85,20 +95,17 @@ export class AlbumService {
     if (updatedAlbum.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
-    // const { albums } = await this.artistModel.findById(
-    //   artistId,
-    // );
+    const { albums } = await this.artistModel.findById(artistId);
 
-    // const data = {
-    //   id: artistId,
-    //   albums,
-    // };
-    // this.eventEmitter.emit('update.artist', data);
-
-    return {
-      msg: 'album info updated successfully',
-      updated: updatedAlbum.modifiedCount,
+    const data = {
+      id: artistId,
+      albums,
     };
+
+    const elastic = this.sendToElastic('update.elastic.artist', data);
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async removeAlbumById(id: string) {
@@ -125,20 +132,17 @@ export class AlbumService {
     if (removedAlbum.modifiedCount == 0) return MyInternalServerError;
 
     // send data with event emitter to elasticsearch
-    // const { albums } = await this.artistModel.findById(
-    //   artistId,
-    // );
+    const { albums } = await this.artistModel.findById(artistId);
 
-    // const data = {
-    //   id: artistId,
-    //   albums,
-    // };
-    // this.eventEmitter.emit('update.artist', data);
-
-    return {
-      msg: 'album removed successfuly',
-      removed: removedAlbum.modifiedCount,
+    const data = {
+      id: artistId,
+      albums,
     };
+
+    const elastic = this.sendToElastic('update.elastic.artist', data);
+    if (!elastic) return MyInternalServerError('Elastic');
+
+    return elastic;
   }
 
   async findAlbum(albumName?: string, id?: string) {
@@ -157,5 +161,21 @@ export class AlbumService {
       );
       return album;
     }
+  }
+
+  sendToElastic(address: string, data) {
+    const url: string = this.config.get('ELASTIC_URL');
+    const queue: string = this.config.get('ELASTIC_QUEUE');
+
+    const redisMicroservice = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [url],
+        queue,
+      },
+    });
+
+    const result = redisMicroservice.send(address, data);
+    return result;
   }
 }
