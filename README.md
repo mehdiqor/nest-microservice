@@ -1,40 +1,46 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
+<h1 align="center">Some AI-generated logos for this project</h1>
+<p>
+  <a href="http://nestjs.com/" target="blank"><img src="./logo/1.jpeg"/></a>
+  <a href="http://nestjs.com/" target="blank"><img src="./logo/2.jpeg"/></a>
+  <a href="http://nestjs.com/" target="blank"><img src="./logo/3.jpeg"/></a>
+  <a href="http://nestjs.com/" target="blank"><img src="./logo/4.jpeg"/></a>
 </p>
 
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+  <p align="center">This project developed by <a href="http://nestjs.com/" target="_blank">Nest.js</a> framework based on microservice architecture</p>
+  <p align="center">you can find the base services <a href="https://github.com/mehdiqor/nest-auth" target="_blank">here</a></p>
     <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This repsitory contains 3 services:
 
-## Installation
+1. **Music-Service:** artists can add their albums and tracks<br>
+   And the music file is uploaded to google-storage
+
+2. **Film-Service:** directors can add their movies<br>
+   And the cover of the movie is uploaded to google-storage
+
+3. **Elasticsearch-Service:** In this project, the CQRS pattern is used<br>
+   Users can search and find the movie and music they want from elasticsearch<br>
+
+you can access the base service repository from this [link](https://github.com/mehdiqor/nest-auth).
+
+## Installation and Running the app
 
 ```bash
+# first, enter the desired service
+$ cd SERVICE_NAME
+
+# docker compose
+$ docker-compose up -d
+
+# install with yarn
+$ yarn
 $ yarn install
-```
 
-## Running the app
-
-```bash
 # development
 $ yarn run start
 
@@ -45,29 +51,8 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
-## Test
-
-```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+- Author - [Mehdi Ghorbani](https://github.com/mehdiqor)
+- Telegram - [Mehdi_qor](t.me/Mehdi_qor)
+- Email - [mehdighorbanin@gmail.com](mailto:mehdighorbanin@gmail.com)

@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { DirectorService } from './director.service';
 import { AddDirectorDto, UpdateDirectorDto } from './dto';
 import { MessagePattern } from '@nestjs/microservices';
@@ -7,8 +7,16 @@ import { MessagePattern } from '@nestjs/microservices';
 export class DirectorController {
   constructor(private readonly directorService: DirectorService) {}
 
+  @Get('/:name')
+  async addArtistRoute(@Param('name') name: string): Promise<any> {
+    console.log(name);
+    return this.directorService.findDirector(name);
+  }
+
   @MessagePattern('add-director')
   addDirector(dto: AddDirectorDto) {
+    // Register a new route in director name
+    const route = this.addArtistRoute(dto.name);
     return this.directorService.addDirector(dto);
   }
 
